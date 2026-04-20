@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { BikeService } from '../../services/bikes.service';
 import { TripService } from '../../services/trips.service';
@@ -9,7 +9,7 @@ import { TripService } from '../../services/trips.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
 
   // ===== STATS =====
   stats = {
@@ -63,15 +63,24 @@ export class HomeComponent implements OnInit {
   showDeleteModal = false;
   userToDelete: any = null;
   isDeleting = false;
+  deleteError = '';
 
   // ===== MODAL BLOCK =====
   showBlockModal = false;
   userToBlock: any = null;
   isBlocking = false;
+  blockError = '';
 
-  // ✅ BikeService et TripService ajoutés au constructor
+  // ✅ Subscriptions pour éviter memory leak
+  private usersSub?: Subscription;
+  private bikesSub?: Subscription;
+  private tripsSub?: Subscription;
+  private createSub?: Subscription;
+  private editSub?: Subscription;
+  private deleteSub?: Subscription;
+  private blockSub?: Subscription;
+
   constructor(
-    private router: Router,
     private userService: UserService,
     private bikeService: BikeService,
     private tripService: TripService
@@ -86,7 +95,7 @@ export class HomeComponent implements OnInit {
   // ===== LOAD USERS =====
   loadUsers() {
     this.isLoading = true;
-    this.userService.getUsers().subscribe({
+    this.usersSub = this.userService.getUsers().subscribe({
       next: (res) => {
         this.users = res.data.users || [];
         this.filteredUsers = [...this.users];
@@ -94,7 +103,7 @@ export class HomeComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Error loading users', err);
+        this.error = this.userService.handleError(err); // ✅
         this.isLoading = false;
       }
     });
@@ -102,7 +111,7 @@ export class HomeComponent implements OnInit {
 
   // ===== LOAD BIKES =====
   loadBikes() {
-    this.bikeService.getBikes().subscribe({
+    this.bikesSub = this.bikeService.getBikes().subscribe({
       next: (res) => {
         const bikes = Array.isArray(res.data) ? res.data :
                       Array.isArray(res) ? res : [];
@@ -113,13 +122,15 @@ export class HomeComponent implements OnInit {
           b.status === 'Offline' || b.status?.toLowerCase() === 'maintenance'
         ).length;
       },
-      error: (err) => console.error('Error loading bikes', err)
+      error: (err) => {
+        this.error = this.bikeService.handleError(err); // ✅
+      }
     });
   }
 
   // ===== LOAD TRIPS =====
   loadTrips() {
-    this.tripService.getTrips().subscribe({
+    this.tripsSub = this.tripService.getTrips().subscribe({
       next: (res) => {
         const trips = res.data?.assignments || res.data || [];
         const today = new Date().toDateString();
@@ -133,7 +144,9 @@ export class HomeComponent implements OnInit {
           value: t.status === 'returned' ? 'Returned' : 'Active'
         }));
       },
-      error: (err) => console.error('Error loading trips', err)
+      error: (err) => {
+        this.error = this.userService.handleError(err); // ✅
+      }
     });
   }
 
@@ -153,10 +166,7 @@ export class HomeComponent implements OnInit {
   get userCount()  { return this.users.filter(u => u.role === 'user').length;  }
 
   // ===== MODAL ADD =====
-  openAddModal() {
-    this.resetForm();
-    this.showAddModal = true;
-  }
+  openAddModal() { this.resetForm(); this.showAddModal = true; }
 
   closeAddModal(event?: MouseEvent) {
     if (!event || (event.target as HTMLElement).classList.contains('modal-overlay')) {
@@ -167,8 +177,8 @@ export class HomeComponent implements OnInit {
 
   resetForm() {
     this.form = { username: '', email: '', firstName: '', lastName: '', password: '', role: 'user' };
-    this.error   = '';
-    this.success = false;
+    this.error        = '';
+    this.success      = false;
     this.showPassword = false;
     this.isSubmitting = false;
   }
@@ -187,7 +197,7 @@ export class HomeComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.userService.createUser(this.form).subscribe({
+    this.createSub = this.userService.createUser(this.form).subscribe({
       next: () => {
         this.success = true;
         this.isSubmitting = false;
@@ -195,7 +205,7 @@ export class HomeComponent implements OnInit {
         setTimeout(() => { this.showAddModal = false; this.resetForm(); }, 1500);
       },
       error: (err) => {
-        this.error = err?.error?.message || 'Error creating user.';
+        this.error = this.userService.handleError(err); // ✅
         this.isSubmitting = false;
       }
     });
@@ -226,17 +236,14 @@ export class HomeComponent implements OnInit {
     this.editError = '';
     this.isEditing = true;
 
-    const userId = this.userToEdit.id;
-    console.log('Editing user ID:', userId);
-
-    this.userService.updateUser(userId, this.editForm).subscribe({
+    this.editSub = this.userService.updateUser(this.userToEdit.id, this.editForm).subscribe({
       next: () => {
         this.isEditing = false;
         this.showEditModal = false;
         this.loadUsers();
       },
       error: (err) => {
-        this.editError = err?.error?.message || 'Error updating user.';
+        this.editError = this.userService.handleError(err); // ✅
         this.isEditing = false;
       }
     });
@@ -245,13 +252,14 @@ export class HomeComponent implements OnInit {
   // ===== MODAL DELETE =====
   confirmDelete(user: any) {
     this.userToDelete    = user;
+    this.deleteError     = '';
     this.showDeleteModal = true;
   }
 
   deleteUser() {
     if (!this.userToDelete) return;
     this.isDeleting = true;
-    this.userService.deleteUser(this.userToDelete.id).subscribe({
+    this.deleteSub = this.userService.deleteUser(this.userToDelete.id).subscribe({
       next: () => {
         this.users = this.users.filter(u => u.id !== this.userToDelete.id);
         this.filterUsers();
@@ -261,7 +269,7 @@ export class HomeComponent implements OnInit {
         this.isDeleting = false;
       },
       error: (err) => {
-        console.error('Error deleting user', err);
+        this.deleteError = this.userService.handleError(err); // ✅
         this.isDeleting = false;
       }
     });
@@ -270,31 +278,38 @@ export class HomeComponent implements OnInit {
   // ===== MODAL BLOCK =====
   confirmBlock(user: any) {
     this.userToBlock    = user;
+    this.blockError     = '';
     this.showBlockModal = true;
   }
 
   toggleBlock() {
     if (!this.userToBlock) return;
     this.isBlocking = true;
-
     const newStatus = !this.userToBlock.isBlocked;
-
-    this.userService.toggleBlockUser(this.userToBlock.id, newStatus).subscribe({
+    this.blockSub = this.userService.toggleBlockUser(this.userToBlock.id, newStatus).subscribe({
       next: () => {
         this.isBlocking = false;
         this.showBlockModal = false;
         this.loadUsers();
       },
       error: (err) => {
-        console.error('Error blocking user', err);
+        this.blockError = this.userService.handleError(err); // ✅
         this.isBlocking = false;
       }
     });
   }
 
   // ===== LOGOUT =====
-  logout() {
-    localStorage.removeItem('token');
-    this.router.navigate(['/login']);
+  logout() { this.userService.logout(); } // ✅
+
+  // ===== CLEANUP =====
+  ngOnDestroy(): void {
+    this.usersSub?.unsubscribe();
+    this.bikesSub?.unsubscribe();
+    this.tripsSub?.unsubscribe();
+    this.createSub?.unsubscribe();
+    this.editSub?.unsubscribe();
+    this.deleteSub?.unsubscribe();
+    this.blockSub?.unsubscribe();
   }
 }

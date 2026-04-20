@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { TripService } from '../../services/trips.service';
 
 @Component({
@@ -7,35 +7,42 @@ import { TripService } from '../../services/trips.service';
   templateUrl: './trips.component.html',
   styleUrls: ['./trips.component.scss']
 })
-export class TripsComponent implements OnInit {
+export class TripsComponent implements OnInit, OnDestroy {
 
   trips: any[] = [];
   filteredTrips: any[] = [];
   searchTerm = '';
   statusFilter = '';
   isLoading = false;
+  error = '';
 
   showDeleteModal = false;
   tripToDelete: any = null;
   isDeleting = false;
+  deleteError = '';
 
-  constructor(private router: Router, private tripService: TripService) {}
+  // ✅ Subscriptions pour éviter memory leak
+  private tripsSub?: Subscription;
+  private deleteSub?: Subscription;
+
+  constructor(private tripService: TripService) {}  // ✅ Router supprimé
 
   ngOnInit() { this.loadTrips(); }
 
   loadTrips() {
-  this.isLoading = true;
-  this.tripService.getTrips().subscribe({
-    next: (res) => {
-      console.log('Trips response:', res);
-      // ✅ La structure est res.data.assignments
-      this.trips = res.data?.assignments || res.data || [];
-      this.filteredTrips = [...this.trips];
-      this.isLoading = false;
-    },
-    error: (err) => { console.error('Error:', err); this.isLoading = false; }
-  });
-}
+    this.isLoading = true;
+    this.tripsSub = this.tripService.getTrips().subscribe({
+      next: (res) => {
+        this.trips = res.data?.assignments || res.data || [];
+        this.filteredTrips = [...this.trips];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error = this.tripService.handleError(err);  // ✅
+        this.isLoading = false;
+      }
+    });
+  }
 
   filterTrips() {
     this.filteredTrips = this.trips.filter(t => {
@@ -52,7 +59,6 @@ export class TripsComponent implements OnInit {
     });
   }
 
-  // ✅ assigned_at → returned_at pour la durée
   getDuration(start: string, end: string): string {
     if (!start || !end) return '—';
     const ms = new Date(end).getTime() - new Date(start).getTime();
@@ -71,12 +77,16 @@ export class TripsComponent implements OnInit {
     }
   }
 
-  confirmDelete(trip: any) { this.tripToDelete = trip; this.showDeleteModal = true; }
+  confirmDelete(trip: any) {
+    this.tripToDelete = trip;
+    this.deleteError = '';
+    this.showDeleteModal = true;
+  }
 
   deleteTrip() {
     if (!this.tripToDelete) return;
     this.isDeleting = true;
-    this.tripService.deleteTrip(this.tripToDelete.id).subscribe({
+    this.deleteSub = this.tripService.deleteTrip(this.tripToDelete.id).subscribe({
       next: () => {
         this.trips = this.trips.filter(t => t.id !== this.tripToDelete.id);
         this.filterTrips();
@@ -84,9 +94,18 @@ export class TripsComponent implements OnInit {
         this.tripToDelete = null;
         this.isDeleting = false;
       },
-      error: (err) => { console.error('Error deleting trip:', err); this.isDeleting = false; }
+      error: (err) => {
+        this.deleteError = this.tripService.handleError(err);  // ✅
+        this.isDeleting = false;
+      }
     });
   }
 
-  logout() { localStorage.removeItem('token'); this.router.navigate(['/login']); }
+  logout() { this.tripService.logout(); }  // ✅
+
+  // ✅ Cleanup à la destruction du composant
+  ngOnDestroy(): void {
+    this.tripsSub?.unsubscribe();
+    this.deleteSub?.unsubscribe();
+  }
 }
