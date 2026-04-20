@@ -1,0 +1,359 @@
+<div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logo_smartride.png" alt="SmartRide" class="brand-logo" />
+      <span class="brand-name">SmartRide</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- ✅ Bikes actif — image -->
+      <a class="nav-item active" routerLink="/bikes">
+        <img src="assets/bike.png" alt="bikes" width="16" height="16"
+             style="filter: brightness(0) invert(0.5); object-fit: contain;" />
+        <span>Bikes</span>
+      </a>
+
+      <!-- ✅ Trips — image -->
+      <a class="nav-item" routerLink="/trips">
+  <img src="assets/trip.png" alt="trips" width="16" height="16"
+       style="filter: brightness(0) invert(0.5); object-fit: contain;" />
+  <span>Trips</span>
+</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+        <span>Settings</span>
+      </a>
+      <button class="nav-item logout-btn" (click)="logout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Log out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">Bikes</h1>
+        <span class="page-sub">Manage your fleet</span>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search bikes..." [(ngModel)]="searchTerm" (input)="filterBikes()" />
+        </div>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">All Bikes</h2>
+          <span class="panel-sub">{{ filteredBikes.length }} results</span>
+        </div>
+        <div class="panel-actions">
+          <div class="filter-row">
+            <select [(ngModel)]="statusFilter" (change)="filterBikes()">
+              <option value="">All statuses</option>
+              <option value="Available">Available</option>
+              <option value="In Use">In Use</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Offline">Offline</option>
+            </select>
+          </div>
+          <button class="btn-primary" (click)="openAddModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Bike
+          </button>
+        </div>
+      </div>
+
+      <div class="loading" *ngIf="isLoading">
+        <div class="spinner"></div><span>Loading bikes...</span>
+      </div>
+
+      <div class="table-wrap" *ngIf="!isLoading">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Bike</th>
+              <th>Brand / Model</th>
+              <th>Battery</th>
+              <th>Serial Number</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bike of filteredBikes; let i = index">
+              <td class="muted">{{ i + 1 }}</td>
+
+              <!-- ✅ image dans la cellule bike au lieu du SVG -->
+              <td>
+                <div class="user-cell">
+                  <div class="bike-icon">
+                    <img src="assets/bike.png" alt="bike" width="14" height="14"
+                         style="filter: brightness(0) invert(0.4); object-fit: contain;" />
+                  </div>
+                  <div class="user-meta">
+                    <span class="user-name">{{ bike.serialNumber }}</span>
+                    <span class="user-id">ID: {{ bike.id }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td class="muted">{{ bike.brand }} — {{ bike.model }}</td>
+
+              <td>
+                <div class="battery-wrap">
+                  <div class="battery-bar">
+                    <div class="battery-fill" [style.width.%]="bike.batteryLevel"
+                      [ngClass]="bike.batteryLevel > 50 ? 'high' : bike.batteryLevel > 20 ? 'mid' : 'low'">
+                    </div>
+                  </div>
+                  <span class="battery-label">{{ bike.batteryLevel }}%</span>
+                </div>
+              </td>
+
+              <td class="muted">{{ bike.serialNumber || '—' }}</td>
+
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(bike.status)">{{ bike.status }}</span>
+              </td>
+
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon edit" title="Edit" (click)="editBike(bike)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon delete" title="Delete" (click)="confirmDelete(bike)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredBikes.length === 0 && !isLoading">
+              <td colspan="7" class="empty-row">No bikes found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ========== MODAL ADD BIKE ========== -->
+<div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal($event)">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <!-- ✅ image dans modal-icon -->
+      <div class="modal-icon green">
+        <img src="assets/bike.png" alt="bike" width="20" height="20"
+             style="filter: brightness(0) invert(1); object-fit: contain;" />
+      </div>
+      <div><h3>Add New Bike</h3><p>Fill in the details to register a new bike</p></div>
+      <button class="modal-close" (click)="showAddModal = false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Serial Number <span class="req">*</span></label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="form.serialNumber" name="serialNumber"
+              placeholder="e.g. SN-001" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Brand <span class="req">*</span></label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="form.brand" name="brand"
+              placeholder="e.g. Yamaha" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Model <span class="req">*</span></label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="form.model" name="model"
+              placeholder="e.g. E-200" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Battery Level (%)</label>
+          <div class="input-wrap no-icon">
+            <input type="number" [(ngModel)]="form.batteryLevel" name="batteryLevel"
+              min="0" max="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <div class="input-wrap select-wrap no-icon">
+            <select [(ngModel)]="form.status" name="status">
+              <option value="Available">Available</option>
+              <option value="In Use">In Use</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Offline">Offline</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="form.notes" name="notes"
+              placeholder="Optional notes" />
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+      <div class="alert alert-success" *ngIf="success">Bike added successfully!</div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="showAddModal = false">Cancel</button>
+        <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Adding...' : 'Add Bike' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========== MODAL EDIT BIKE ========== -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal($event)">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <!-- ✅ image dans modal-icon edit -->
+      <div class="modal-icon blue">
+        <img src="assets/bike.png" alt="bike" width="18" height="18"
+             style="filter: brightness(0) invert(1); object-fit: contain;" />
+      </div>
+      <div><h3>Edit Bike</h3><p>Modify {{ bikeToEdit?.serialNumber }}</p></div>
+      <button class="modal-close" (click)="showEditModal = false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onEditSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Serial Number <span class="req">*</span></label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="editForm.serialNumber" name="serialNumber" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Brand <span class="req">*</span></label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="editForm.brand" name="brand" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Model <span class="req">*</span></label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="editForm.model" name="model" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Battery Level (%)</label>
+          <div class="input-wrap no-icon">
+            <input type="number" [(ngModel)]="editForm.batteryLevel" name="batteryLevel"
+              min="0" max="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <div class="input-wrap select-wrap no-icon">
+            <select [(ngModel)]="editForm.status" name="status">
+              <option value="Available">Available</option>
+              <option value="In Use">In Use</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Offline">Offline</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <div class="input-wrap no-icon">
+            <input type="text" [(ngModel)]="editForm.notes" name="notes" />
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-error" *ngIf="editError">{{ editError }}</div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="showEditModal = false">Cancel</button>
+        <button type="submit" class="btn-submit" [disabled]="isEditing">
+          {{ isEditing ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========== MODAL DELETE ========== -->
+<div class="modal-overlay" *ngIf="showDeleteModal">
+  <div class="modal">
+    <div class="modal-icon red">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      </svg>
+    </div>
+    <h3>Delete Bike</h3>
+    <p>Are you sure you want to delete <strong>{{ bikeToDelete?.serialNumber }}</strong>? This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="showDeleteModal = false">Cancel</button>
+      <button class="btn-danger" (click)="deleteBike()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Deleting...' : 'Delete' }}
+      </button>
+    </div>
+  </div>
+</div>
