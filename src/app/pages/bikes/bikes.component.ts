@@ -46,6 +46,7 @@ export class BikesComponent implements OnInit {
   showDeleteModal = false;
   bikeToDelete: any = null;
   isDeleting = false;
+  deleteError = '';
 
   constructor(private router: Router, private bikeService: BikeService) {}
 
@@ -55,8 +56,6 @@ export class BikesComponent implements OnInit {
     this.isLoading = true;
     this.bikeService.getBikes().subscribe({
       next: (res) => {
-        console.log('Bikes response:', res);
-
         if (Array.isArray(res)) {
           this.bikes = res;
         } else if (Array.isArray(res.data)) {
@@ -67,20 +66,17 @@ export class BikesComponent implements OnInit {
           this.bikes = res.bikes;
         } else {
           this.bikes = [];
-          console.error('Structure inconnue:', res);
         }
-
         this.filteredBikes = [...this.bikes];
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Error loading bikes:', err);
+        this.error = this.bikeService.handleError(err); // ✅
         this.isLoading = false;
       }
     });
   }
 
-  // ✅ filterBikes() corrigé — matchSearch était manquant
   filterBikes() {
     this.filteredBikes = this.bikes.filter(b => {
       const matchStatus = this.statusFilter
@@ -132,7 +128,7 @@ export class BikesComponent implements OnInit {
         setTimeout(() => { this.showAddModal = false; this.resetForm(); }, 1500);
       },
       error: (err) => {
-        this.error = err?.error?.message || 'Error creating bike.';
+        this.error = this.bikeService.handleError(err); // ✅
         this.isSubmitting = false;
       }
     });
@@ -163,7 +159,6 @@ export class BikesComponent implements OnInit {
     this.editError = '';
     this.isEditing = true;
     const bikeId = this.bikeToEdit.id;
-    console.log('Editing bike ID:', bikeId);
     this.bikeService.updateBike(bikeId, this.editForm).subscribe({
       next: () => {
         this.isEditing = false;
@@ -171,13 +166,17 @@ export class BikesComponent implements OnInit {
         this.loadBikes();
       },
       error: (err) => {
-        this.editError = err?.error?.message || 'Error updating bike.';
+        this.editError = this.bikeService.handleError(err); // ✅
         this.isEditing = false;
       }
     });
   }
 
-  confirmDelete(bike: any) { this.bikeToDelete = bike; this.showDeleteModal = true; }
+  confirmDelete(bike: any) {
+    this.bikeToDelete = bike;
+    this.deleteError = '';
+    this.showDeleteModal = true;
+  }
 
   deleteBike() {
     if (!this.bikeToDelete) return;
@@ -192,13 +191,12 @@ export class BikesComponent implements OnInit {
         this.isDeleting = false;
       },
       error: (err) => {
-        console.error('Error deleting bike:', err);
+        this.deleteError = this.bikeService.handleError(err); // ✅
         this.isDeleting = false;
       }
     });
   }
 
-  // ✅ getStatusClass() corrigé — insensible à la casse
   getStatusClass(status: string) {
     if (!status) return 'badge-blue';
     switch (status.toLowerCase()) {
@@ -210,5 +208,5 @@ export class BikesComponent implements OnInit {
     }
   }
 
-  logout() { localStorage.removeItem('token'); this.router.navigate(['/login']); }
+  logout() { this.bikeService.logout(); }
 }
