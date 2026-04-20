@@ -1,0 +1,54 @@
+<div class="login-wrapper">
+  <div class="blob"></div>
+
+  <div class="glass-card">
+
+    <!-- Avatar / Logo -->
+    <div class="avatar">
+      <img src="assets/logo_smartride.png" alt="SmartRide" />
+    </div>
+
+    <h2>SMARTRIDE</h2>
+    <p class="subtitle">Admin Login</p>
+
+    <form (ngSubmit)="onLogin()">
+
+      <div class="input-group">
+       
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="Email ID"
+          required
+        />
+      </div>
+
+      <div class="input-group">
+       
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Password"
+          required
+        />
+      </div>
+
+      <div class="form-options">
+        <label class="remember">
+          <input type="checkbox" /> Remember me
+        </label>
+        <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <p class="error" *ngIf="error">{{ error }}</p>
+
+      <button type="submit" [disabled]="isLoading">
+        <span *ngIf="!isLoading">LOGIN</span>
+        <span *ngIf="isLoading">Loading...</span>
+      </button>
+
+    </form>
+  </div>
+</div>
