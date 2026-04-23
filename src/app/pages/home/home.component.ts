@@ -71,7 +71,19 @@ export class HomeComponent implements OnInit, OnDestroy {
   isBlocking = false;
   blockError = '';
 
-  // ✅ Subscriptions pour éviter memory leak
+  // ===== MODAL ASSIGN BIKE =====
+  showAssignModal = false;
+  userToAssign: any = null;
+  availableBikes: any[] = [];
+  selectedBike: any = null;
+  isLoadingBikes = false;
+  isAssigning = false;
+  assignError = '';
+  assignSuccess = false;
+  private assignSub?: Subscription;
+  private bikeListSub?: Subscription;
+
+  // ===== SUBSCRIPTIONS =====
   private usersSub?: Subscription;
   private bikesSub?: Subscription;
   private tripsSub?: Subscription;
@@ -103,7 +115,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = this.userService.handleError(err); // ✅
+        this.error = this.userService.handleError(err);
         this.isLoading = false;
       }
     });
@@ -123,7 +135,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         ).length;
       },
       error: (err) => {
-        this.error = this.bikeService.handleError(err); // ✅
+        this.error = this.bikeService.handleError(err);
       }
     });
   }
@@ -145,7 +157,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         }));
       },
       error: (err) => {
-        this.error = this.userService.handleError(err); // ✅
+        this.error = this.userService.handleError(err);
       }
     });
   }
@@ -205,7 +217,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         setTimeout(() => { this.showAddModal = false; this.resetForm(); }, 1500);
       },
       error: (err) => {
-        this.error = this.userService.handleError(err); // ✅
+        this.error = this.userService.handleError(err);
         this.isSubmitting = false;
       }
     });
@@ -243,7 +255,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loadUsers();
       },
       error: (err) => {
-        this.editError = this.userService.handleError(err); // ✅
+        this.editError = this.userService.handleError(err);
         this.isEditing = false;
       }
     });
@@ -269,7 +281,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.isDeleting = false;
       },
       error: (err) => {
-        this.deleteError = this.userService.handleError(err); // ✅
+        this.deleteError = this.userService.handleError(err);
         this.isDeleting = false;
       }
     });
@@ -293,14 +305,77 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loadUsers();
       },
       error: (err) => {
-        this.blockError = this.userService.handleError(err); // ✅
+        this.blockError = this.userService.handleError(err);
         this.isBlocking = false;
       }
     });
   }
 
+  // ===== MODAL ASSIGN BIKE =====
+  openAssignModal(user: any) {
+    this.userToAssign   = user;
+    this.selectedBike   = null;
+    this.assignError    = '';
+    this.assignSuccess  = false;
+    this.showAssignModal = true;
+    this.loadAvailableBikes();
+  }
+
+  closeAssignModal(event?: MouseEvent) {
+    if (!event || (event.target as HTMLElement).classList.contains('modal-overlay')) {
+      this.showAssignModal = false;
+    }
+  }
+
+  loadAvailableBikes() {
+  this.isLoadingBikes = true;
+  this.bikeListSub = this.bikeService.getBikes().subscribe({
+    next: (res) => {
+      // ← res.data.bikes وليس res.data
+      const bikes = res.data?.bikes || res.data || [];
+      this.availableBikes = bikes.filter((b: any) =>
+        b.status?.toLowerCase() === 'available'
+      );
+      this.isLoadingBikes = false;
+    },
+    error: () => {
+      this.assignError = 'Failed to load bikes';
+      this.isLoadingBikes = false;
+    }
+  });
+}
+
+  selectBike(bike: any) {
+    this.selectedBike = bike;
+  }
+
+  assignBike() {
+    if (!this.selectedBike || !this.userToAssign) return;
+    this.isAssigning = true;
+    this.assignError = '';
+
+    this.assignSub = this.bikeService.assignBike(
+      this.userToAssign.id,
+      this.selectedBike.id
+    ).subscribe({
+      next: () => {
+        this.assignSuccess = true;
+        this.isAssigning = false;
+        this.loadBikes();
+        this.loadTrips();
+        setTimeout(() => {
+          this.showAssignModal = false;
+        }, 1500);
+      },
+      error: (err) => {
+        this.assignError = err.error?.message || 'Failed to assign bike';
+        this.isAssigning = false;
+      }
+    });
+  }
+
   // ===== LOGOUT =====
-  logout() { this.userService.logout(); } // ✅
+  logout() { this.userService.logout(); }
 
   // ===== CLEANUP =====
   ngOnDestroy(): void {
@@ -311,5 +386,35 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.editSub?.unsubscribe();
     this.deleteSub?.unsubscribe();
     this.blockSub?.unsubscribe();
+    this.assignSub?.unsubscribe();
+    this.bikeListSub?.unsubscribe();
   }
+
+// ===== QR CODE =====
+showQrModal = false;
+qrBike: any = null;
+qrCodeUrl = '';
+
+async openQrModal(bike: any, event: Event) {
+  event.stopPropagation();
+  this.qrBike = bike;
+  this.qrCodeUrl = '';
+  this.showQrModal = true;
+  try {
+    const QRCode = await import('qrcode');
+    this.qrCodeUrl = await QRCode.toDataURL(String(bike.id), {
+      width: 200,
+      margin: 2,
+      color: { dark: '#1a8a4a', light: '#ffffff' }
+    });
+  } catch (err) {
+    console.error('QR error:', err);
+  }
+}
+
+closeQrModal(event?: MouseEvent) {
+  if (!event || (event.target as HTMLElement).classList.contains('modal-overlay')) {
+    this.showQrModal = false;
+  }
+}
 }

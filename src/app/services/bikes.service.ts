@@ -30,7 +30,15 @@ export class BikeService {
     return this.http.delete(`${this.baseUrl}/bikes/${id}`, { headers: this.getHeaders() });
   }
 
-  // ✅ handleError centralisé ici
+  // ✅ assignBike — baseUrl مش apiUrl
+  assignBike(userId: number, bikeId: number): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/bike-assignments`,
+      { userId, bikeId },
+      { headers: this.getHeaders() }
+    );
+  }
+
   handleError(err: any): string {
     if (err.status === 0)   return 'Cannot reach server. Check your connection.';
     if (err.status === 401) return 'Unauthorized. Please login again.';
@@ -40,7 +48,6 @@ export class BikeService {
     return err?.error?.message || 'Something went wrong. Please try again.';
   }
 
-  // ✅ logout centralisé ici
   logout(): void {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);

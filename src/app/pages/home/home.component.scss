@@ -225,6 +225,7 @@ $sidebar-width: 220px;
   padding: 9px 20px; background: $green; color: white;
   border: none; border-radius: 8px; font-size: 13px;
   font-weight: 600; cursor: pointer; transition: all 0.2s;
+  text-decoration: none;
   svg { stroke: white; }
   &:hover:not(:disabled) { background: $green-dark; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(26,138,74,0.3); }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -283,7 +284,7 @@ table {
 }
 
 // ===== ACTION BUTTONS =====
-.action-btns { display: flex; gap: 6px; }
+.action-btns { display: flex; gap: 6px; align-items: center; }
 
 .btn-icon {
   width: 30px; height: 30px; border-radius: 7px;
@@ -464,6 +465,166 @@ table {
     border: 1px solid rgba(26,138,74,0.2);
     svg { stroke: $green; }
   }
+}
+
+// ===== ASSIGN BIKE =====
+.bikes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.bike-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid $border;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: $green-dim;
+    border-color: $border-em;
+  }
+
+  &.selected {
+    background: $green-dim;
+    border-color: $green;
+  }
+}
+
+.bike-icon {
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  background: $green-dim;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bike-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bike-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.bike-serial {
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.bike-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: $green-dim;
+  flex-shrink: 0;
+}
+
+.empty-bikes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  color: $text-muted;
+  font-size: 14px;
+}
+
+// ===== ASSIGN BUTTON =====
+.btn-assign {
+  padding: 5px 10px;
+  background: $green-dim;
+  color: $green;
+  border: 1px solid rgba(26,138,74,0.3);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: $green;
+    color: white;
+  }
+}
+
+// ===== QR BUTTON =====
+.btn-qr {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  background: $blue-dim;
+  color: $blue;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  img { transition: filter 0.2s; }
+
+  &:hover {
+    background: $blue;
+    color: white;
+    img { filter: brightness(0) invert(1); }
+  }
+}
+
+// ===== QR MODAL =====
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 28px 0;
+  width: 100%;
+}
+
+.qr-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.qr-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  border: 2px solid $border;
+  padding: 12px;
+  display: block;
+  margin: 0 auto;
+}
+
+.qr-label {
+  font-size: 14px;
+  color: $text-secondary;
+  text-align: center;
+  width: 100%;
+  strong { color: $text-primary; }
 }
 
 // ===== RESPONSIVE =====
