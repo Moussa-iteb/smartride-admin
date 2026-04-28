@@ -402,7 +402,7 @@ async openQrModal(bike: any, event: Event) {
   this.showQrModal = true;
   try {
     const QRCode = await import('qrcode');
-    this.qrCodeUrl = await QRCode.toDataURL(String(bike.id), {
+    this.qrCodeUrl = await QRCode.toDataURL(String(bike.qrCode || bike.id), {
       width: 200,
       margin: 2,
       color: { dark: '#1a8a4a', light: '#ffffff' }
