@@ -666,3 +666,20 @@ table {
     &:focus { border-color: $green; }
   }
 }
+.btn-view {
+  margin-left: 12px;
+  padding: 5px 12px;
+  font-size: 12px;
+  border: 1px solid #4CAF50;
+  border-radius: 6px;
+  background: transparent;
+  color: #4CAF50;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-view:hover {
+  background: #4CAF50;
+  color: white;
+}

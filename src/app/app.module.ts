@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
@@ -9,6 +10,8 @@ import { HomeComponent } from './pages/home/home.component';
 import { BikesComponent } from './pages/bikes/bikes.component';
 import { TripsComponent } from './pages/trips/trips.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { TripDetailComponent } from './pages/trip-detail-component/trip-detail-component.component';
+import { GoogleMapsModule } from '@angular/google-maps';
 
 @NgModule({
   declarations: [
@@ -17,13 +20,16 @@ import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password
     HomeComponent,
     BikesComponent,
     TripsComponent,
-    ForgotPasswordComponent
+    ForgotPasswordComponent,
+    TripDetailComponent,
   ],
   imports: [
     BrowserModule,
+    CommonModule,
     AppRoutingModule,
     HttpClientModule,
-    FormsModule
+    FormsModule,
+    GoogleMapsModule,
   ],
   bootstrap: [AppComponent]
 })

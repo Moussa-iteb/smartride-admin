@@ -15,6 +15,7 @@ export class BikesComponent implements OnInit {
   statusFilter = '';
   isLoading = false;
 
+  // ✅ Add Modal
   showAddModal = false;
   isSubmitting = false;
   error = '';
@@ -29,6 +30,7 @@ export class BikesComponent implements OnInit {
     notes: ''
   };
 
+  // ✅ Edit Modal
   showEditModal = false;
   bikeToEdit: any = null;
   isEditing = false;
@@ -43,40 +45,48 @@ export class BikesComponent implements OnInit {
     notes: ''
   };
 
+  // ✅ Delete Modal
   showDeleteModal = false;
   bikeToDelete: any = null;
   isDeleting = false;
   deleteError = '';
 
+  // ✅ QR Code Modal
+  showQrModal = false;
+  selectedBike: any = null;
+  qrCodeUrl = '';
+  qrLoading = false;
+
   constructor(private router: Router, private bikeService: BikeService) {}
 
   ngOnInit() { this.loadBikes(); }
 
+  // ══════════════════════════════
+  // LOAD BIKES
+  // ══════════════════════════════
   loadBikes() {
     this.isLoading = true;
     this.bikeService.getBikes().subscribe({
       next: (res) => {
-        if (Array.isArray(res)) {
-          this.bikes = res;
-        } else if (Array.isArray(res.data)) {
-          this.bikes = res.data;
-        } else if (Array.isArray(res.data?.bikes)) {
-          this.bikes = res.data.bikes;
-        } else if (Array.isArray(res.bikes)) {
-          this.bikes = res.bikes;
-        } else {
-          this.bikes = [];
-        }
+        if (Array.isArray(res))             this.bikes = res;
+        else if (Array.isArray(res.data))   this.bikes = res.data;
+        else if (Array.isArray(res.data?.bikes)) this.bikes = res.data.bikes;
+        else if (Array.isArray(res.bikes))  this.bikes = res.bikes;
+        else                                this.bikes = [];
+
         this.filteredBikes = [...this.bikes];
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = this.bikeService.handleError(err); // ✅
+        this.error = this.bikeService.handleError(err);
         this.isLoading = false;
       }
     });
   }
 
+  // ══════════════════════════════
+  // FILTER
+  // ══════════════════════════════
   filterBikes() {
     this.filteredBikes = this.bikes.filter(b => {
       const matchStatus = this.statusFilter
@@ -91,7 +101,72 @@ export class BikesComponent implements OnInit {
     });
   }
 
-  openAddModal() { this.resetForm(); this.showAddModal = true; }
+  // ══════════════════════════════
+  // ✅ QR CODE MODAL
+  // ══════════════════════════════
+  async openQrModal(bike: any) {
+    this.selectedBike = bike;
+    this.qrCodeUrl = '';
+    this.qrLoading = true;
+    this.showQrModal = true;
+
+    // إذا الـ bike عنده QR من الباكاند
+    if (bike.qrCode || bike.qr_code) {
+      this.qrCodeUrl = bike.qrCode || bike.qr_code;
+      this.qrLoading = false;
+      return;
+    }
+
+    // نولد QR من الفرونتاند
+    try {
+      const QRCode = await import('qrcode');
+      this.qrCodeUrl = await (QRCode as any).toDataURL(
+        JSON.stringify({
+          type: 'bike',
+          bikeId: bike.id,
+          serialNumber: bike.serialNumber,
+          brand: bike.brand,
+          model: bike.model
+        }),
+        {
+          width: 250,
+          margin: 2,
+          color: {
+            dark: '#1a8a4a',
+            light: '#ffffff'
+          }
+        }
+      );
+    } catch (err) {
+      console.error('QR generation error:', err);
+      this.qrCodeUrl = '';
+    } finally {
+      this.qrLoading = false;
+    }
+  }
+
+  closeQrModal() {
+    this.showQrModal = false;
+    this.selectedBike = null;
+    this.qrCodeUrl = '';
+    this.qrLoading = false;
+  }
+
+  downloadQR() {
+    if (!this.qrCodeUrl) return;
+    const link = document.createElement('a');
+    link.href = this.qrCodeUrl;
+    link.download = `QR_Bike_${this.selectedBike?.serialNumber || this.selectedBike?.id}.png`;
+    link.click();
+  }
+
+  // ══════════════════════════════
+  // ADD BIKE
+  // ══════════════════════════════
+  openAddModal() {
+    this.resetForm();
+    this.showAddModal = true;
+  }
 
   closeAddModal(event?: MouseEvent) {
     if (!event || (event.target as HTMLElement).classList.contains('modal-overlay')) {
@@ -115,25 +190,34 @@ export class BikesComponent implements OnInit {
   }
 
   onSubmit() {
-    this.error = ''; this.success = false;
+    this.error = '';
+    this.success = false;
+
     if (!this.form.serialNumber) { this.error = 'Serial Number is required.'; return; }
     if (!this.form.brand)        { this.error = 'Brand is required.'; return; }
     if (!this.form.model)        { this.error = 'Model is required.'; return; }
+
     this.isSubmitting = true;
     this.bikeService.createBike(this.form).subscribe({
       next: () => {
         this.success = true;
         this.isSubmitting = false;
         this.loadBikes();
-        setTimeout(() => { this.showAddModal = false; this.resetForm(); }, 1500);
+        setTimeout(() => {
+          this.showAddModal = false;
+          this.resetForm();
+        }, 1500);
       },
       error: (err) => {
-        this.error = this.bikeService.handleError(err); // ✅
+        this.error = this.bikeService.handleError(err);
         this.isSubmitting = false;
       }
     });
   }
 
+  // ══════════════════════════════
+  // EDIT BIKE
+  // ══════════════════════════════
   editBike(bike: any) {
     this.bikeToEdit = bike;
     this.editForm = {
@@ -151,6 +235,8 @@ export class BikesComponent implements OnInit {
   closeEditModal(event?: MouseEvent) {
     if (!event || (event.target as HTMLElement).classList.contains('modal-overlay')) {
       this.showEditModal = false;
+      this.bikeToEdit = null;
+      this.editError = '';
     }
   }
 
@@ -158,20 +244,24 @@ export class BikesComponent implements OnInit {
     if (!this.bikeToEdit) return;
     this.editError = '';
     this.isEditing = true;
-    const bikeId = this.bikeToEdit.id;
-    this.bikeService.updateBike(bikeId, this.editForm).subscribe({
+
+    this.bikeService.updateBike(this.bikeToEdit.id, this.editForm).subscribe({
       next: () => {
         this.isEditing = false;
         this.showEditModal = false;
+        this.bikeToEdit = null;
         this.loadBikes();
       },
       error: (err) => {
-        this.editError = this.bikeService.handleError(err); // ✅
+        this.editError = this.bikeService.handleError(err);
         this.isEditing = false;
       }
     });
   }
 
+  // ══════════════════════════════
+  // DELETE BIKE
+  // ══════════════════════════════
   confirmDelete(bike: any) {
     this.bikeToDelete = bike;
     this.deleteError = '';
@@ -181,22 +271,26 @@ export class BikesComponent implements OnInit {
   deleteBike() {
     if (!this.bikeToDelete) return;
     this.isDeleting = true;
-    const bikeId = this.bikeToDelete.id;
-    this.bikeService.deleteBike(bikeId).subscribe({
+
+    this.bikeService.deleteBike(this.bikeToDelete.id).subscribe({
       next: () => {
         this.bikes = this.bikes.filter(b => b.id !== this.bikeToDelete.id);
         this.filterBikes();
         this.showDeleteModal = false;
         this.bikeToDelete = null;
         this.isDeleting = false;
+        this.deleteError = '';
       },
       error: (err) => {
-        this.deleteError = this.bikeService.handleError(err); // ✅
+        this.deleteError = this.bikeService.handleError(err);
         this.isDeleting = false;
       }
     });
   }
 
+  // ══════════════════════════════
+  // HELPERS
+  // ══════════════════════════════
   getStatusClass(status: string) {
     if (!status) return 'badge-blue';
     switch (status.toLowerCase()) {

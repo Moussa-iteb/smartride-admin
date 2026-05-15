@@ -30,11 +30,11 @@ export class BikeService {
     return this.http.delete(`${this.baseUrl}/bikes/${id}`, { headers: this.getHeaders() });
   }
 
-  // ✅ assignBike — baseUrl مش apiUrl
-  assignBike(userId: number, bikeId: number): Observable<any> {
+  // ✅ tripId اختياري — إذا موجود → يستعمل الـ trip الموجودة
+  assignBike(userId: number, bikeId: number, tripId?: number): Observable<any> {
     return this.http.post(
       `${this.baseUrl}/bike-assignments`,
-      { userId, bikeId },
+      { userId, bikeId, tripId: tripId ?? null },
       { headers: this.getHeaders() }
     );
   }

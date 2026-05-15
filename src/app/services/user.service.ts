@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
 
+import { catchError } from 'rxjs/operators';
 @Injectable({ providedIn: 'root' })
 export class UserService {
 
@@ -20,8 +21,31 @@ export class UserService {
   }
 
   createUser(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/register`, data, { headers: this.getHeaders() });
-  }
+  const payload: any = {
+    username: data.username,
+    email: data.email,
+    password: data.password,
+    role: data.role || 'user',
+    firstName: data.firstName || '',
+    lastName: data.lastName || '',
+    first_name: data.firstName || '',
+    last_name: data.lastName || '',
+  };
+
+  // ✅ Ajoute ce log pour voir exactement ce qui est envoyé
+  console.log('Payload envoyé:', payload);
+
+  return this.http.post(`${this.baseUrl}/auth/register`, payload, {
+    headers: this.getHeaders()
+  }).pipe(
+    // ✅ Log la réponse d'erreur complète
+    catchError((err) => {
+      console.log('Backend error response:', err.error);
+      console.log('Backend errors array:', err.error?.errors); 
+      throw err;
+    })
+  );
+}
 
   updateUser(id: string, data: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/users/${id}`, data, { headers: this.getHeaders() });
@@ -37,13 +61,14 @@ export class UserService {
 
   // ✅ handleError centralisé ici
   handleError(err: any): string {
-    if (err.status === 0)   return 'Cannot reach server. Check your connection.';
-    if (err.status === 401) return 'Unauthorized. Please login again.';
-    if (err.status === 403) return 'Access denied. Admins only.';
-    if (err.status === 404) return 'User not found.';
-    if (err.status === 409) return 'Email or username already exists.';
-    return err?.error?.message || 'Something went wrong. Please try again.';
-  }
+  if (err.status === 0)   return 'Cannot reach server. Check your connection.';
+  if (err.status === 401) return 'Unauthorized. Please login again.';
+  if (err.status === 403) return 'Access denied. Admins only.';
+  if (err.status === 404) return 'User not found.';
+  if (err.status === 409) return err?.error?.message || 'Email or username already exists.';
+  if (err.status === 400) return err?.error?.message || 'Validation failed. Check your inputs.';
+  return err?.error?.message || 'Something went wrong. Please try again.';
+}
 
   // ✅ logout centralisé ici
   logout(): void {

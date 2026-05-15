@@ -1,4 +1,4 @@
-<div class="dashboard">
+<div class="dashboard" (click)="closeTripDropdown()">
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -190,12 +190,15 @@
               </td>
               <td>
                 <div class="action-btns">
+                  <!-- Edit -->
                   <button class="btn-icon edit" title="Edit" (click)="editUser(user)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                   </button>
+
+                  <!-- Block -->
                   <button class="btn-icon block" [title]="user.isBlocked ? 'Unblock' : 'Block'"
                     (click)="confirmBlock(user)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -203,6 +206,8 @@
                       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
                     </svg>
                   </button>
+
+                  <!-- Delete -->
                   <button class="btn-icon delete" title="Delete" (click)="confirmDelete(user)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6"/>
@@ -211,11 +216,14 @@
                       <path d="M9 6V4h6v2"/>
                     </svg>
                   </button>
-                  <button class="btn-assign" title="Assign Bike"
+
+                  <!-- Assign (Bike & Trip) -->
+                  <button class="btn-assign" title="Assign"
                     (click)="openAssignModal(user)"
                     *ngIf="user.role === 'user'">
-                    Assign Bike
+                    Assign
                   </button>
+
                 </div>
               </td>
             </tr>
@@ -227,29 +235,83 @@
       </div>
     </div>
 
-    <!-- ACTIVITY -->
-    <div class="panel activity-panel">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-title">Recent Activity</h2>
-          <span class="panel-sub">Today</span>
-        </div>
-      </div>
-      <div class="activity-list">
-        <div class="activity-item" *ngFor="let item of recentActivity">
-          <div class="act-icon" [ngClass]="item.type">
-            <img src="assets/trip.png" alt="trip" width="12" height="12"
-                 style="filter: brightness(0) invert(1); object-fit: contain;" />
-          </div>
-          <div class="act-info">
-            <span class="act-title">{{ item.title }}</span>
-            <span class="act-time">{{ item.time }}</span>
-          </div>
-          <span class="act-badge" [ngClass]="item.type">{{ item.value }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- BOTTOM ROW -->
+    <div class="bottom-grid">
 
+      <!-- RECENT TRIPS -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Recent Trips</h2>
+            <span class="panel-sub">Last 5 trips</span>
+          </div>
+          <a routerLink="/trips" class="btn-link">View all →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Bike</th>
+                <th>Distance</th>
+                <th>Duration</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let trip of trips">
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar av-blue">
+                      {{ trip.tripUsers?.[0]?.user?.username?.charAt(0)?.toUpperCase() || '?' }}
+                    </div>
+                    <span class="user-name">{{ trip.tripUsers?.[0]?.user?.username || '—' }}</span>
+                  </div>
+                </td>
+                <td class="muted">
+                  {{ trip.tripUsers?.[0]?.bike?.brand }} {{ trip.tripUsers?.[0]?.bike?.model || '—' }}
+                </td>
+                <td class="muted">{{ trip.distance_km || 0 }} km</td>
+                <td class="muted">{{ getDuration(trip.started_at, trip.ended_at) }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getTripStatusClass(trip.status)">
+                    {{ trip.status }}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="trips.length === 0">
+                <td colspan="5" class="empty-row">No trips yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ACTIVITY -->
+      <div class="panel activity-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Recent Activity</h2>
+            <span class="panel-sub">Today</span>
+          </div>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let item of recentActivity">
+            <div class="act-icon" [ngClass]="item.type">
+              <img src="assets/trip.png" alt="trip" width="12" height="12"
+                   style="filter: brightness(0) invert(1); object-fit: contain;" />
+            </div>
+            <div class="act-info">
+              <span class="act-title">{{ item.title }}</span>
+              <span class="act-time">{{ item.time }} · {{ item.distance }} km</span>
+            </div>
+            <span class="act-badge" [ngClass]="item.type">{{ item.value }}</span>
+          </div>
+          <div *ngIf="recentActivity.length === 0" class="empty-row">No recent activity</div>
+        </div>
+      </div>
+
+    </div>
   </main>
 </div>
 
@@ -317,7 +379,8 @@
             <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="form.password" name="password" placeholder="Min. 8 characters" required />
+            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="form.password"
+                   name="password" placeholder="Min. 8 characters" required />
             <button type="button" class="toggle-pw" (click)="showPassword = !showPassword">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path *ngIf="!showPassword" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -484,7 +547,7 @@
   </div>
 </div>
 
-<!-- ========== MODAL ASSIGN BIKE ========== -->
+<!-- ========== MODAL ASSIGN BIKE & TRIP ========== -->
 <div class="modal-overlay" *ngIf="showAssignModal" (click)="closeAssignModal($event)">
   <div class="modal modal-large">
     <div class="modal-header">
@@ -492,9 +555,9 @@
         <img src="assets/bike.png" alt="bike" width="18" height="18"
              style="filter: brightness(0) invert(1); object-fit: contain;" />
       </div>
-      <div>
-        <h3>Assign Bike</h3>
-        <p>Select an available bike for <strong>{{ userToAssign?.username }}</strong></p>
+      <div style="flex: 1;">
+        <h3>Assign Bike & Trip</h3>
+        <p>Select a bike and a trip for <strong>{{ userToAssign?.username }}</strong></p>
       </div>
       <button class="modal-close" (click)="showAssignModal = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -503,44 +566,83 @@
       </button>
     </div>
 
-    <div class="loading" *ngIf="isLoadingBikes">
-      <div class="spinner"></div>
-      <span>Loading available bikes...</span>
+    <!-- SECTION BIKES -->
+    <div class="assign-section">
+      <div class="assign-section-title">
+        <img src="assets/bike.png" alt="bike" width="14" height="14"
+             style="object-fit: contain;" />
+        Available Bikes
+      </div>
+      <div class="loading" *ngIf="isLoadingBikes">
+        <div class="spinner"></div><span>Loading bikes...</span>
+      </div>
+      <div *ngIf="!isLoadingBikes">
+        <div *ngIf="availableBikes.length === 0" class="empty-bikes">
+          <span>No available bikes at the moment.</span>
+        </div>
+        <div class="assign-list" *ngIf="availableBikes.length > 0">
+          <div class="assign-item"
+               *ngFor="let bike of availableBikes"
+               [ngClass]="{'selected': selectedBike?.id === bike.id}"
+               (click)="selectBike(bike)">
+            <div class="bike-icon">
+              <img src="assets/bike.png" alt="bike" width="18" height="18"
+                   style="object-fit: contain;" />
+            </div>
+            <div class="bike-info">
+              <span class="bike-name">{{ bike.brand }} {{ bike.model || 'Bike #' + bike.id }}</span>
+              <span class="bike-serial">Serial: {{ bike.serialNumber || '-' }}</span>
+            </div>
+            <span class="dot-status active">Available</span>
+            <div class="assign-check" *ngIf="selectedBike?.id === bike.id">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8a4a" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div *ngIf="!isLoadingBikes">
-      <div *ngIf="availableBikes.length === 0" class="empty-bikes">
-        <img src="assets/bike.png" alt="no bikes" width="40" height="40"
-             style="opacity: 0.3; object-fit: contain;" />
-        <span>No available bikes at the moment.</span>
+    <!-- DIVIDER -->
+    <div class="assign-divider"></div>
+
+    <!-- SECTION TRIPS -->
+    <div class="assign-section">
+      <div class="assign-section-title">
+        <img src="assets/trip.png" alt="trip" width="14" height="14"
+             style="object-fit: contain;" />
+        All Trips
       </div>
-
-      <div class="bikes-list" *ngIf="availableBikes.length > 0">
-        <div class="bike-item"
-             *ngFor="let bike of availableBikes"
-             [ngClass]="{'selected': selectedBike?.id === bike.id}"
-             (click)="selectBike(bike)">
-          <div class="bike-icon">
-            <img src="assets/bike.png" alt="bike" width="22" height="22"
-                 style="object-fit: contain;" />
-          </div>
-          <div class="bike-info">
-            <span class="bike-name">{{ bike.name || 'Bike #' + bike.id }}</span>
-            <span class="bike-serial">Serial: {{ bike.serialNumber || bike.serial || '-' }}</span>
-          </div>
-          <span class="dot-status active">Available</span>
-
-          
-<button class="btn-qr" title="Show QR Code" (click)="openQrModal(bike, $event)">
-  <img src="assets/ic_qr.png" alt="QR" width="14" height="14"
-       style="filter: brightness(0) invert(0.3); object-fit: contain;" />
-  
-</button>
-
-          <div class="bike-check" *ngIf="selectedBike?.id === bike.id">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8a4a" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
+      <div class="loading" *ngIf="isLoadingTrips">
+        <div class="spinner"></div><span>Loading trips...</span>
+      </div>
+      <div *ngIf="!isLoadingTrips">
+        <div *ngIf="availableTrips.length === 0" class="empty-bikes">
+          <span>No planned trips at the moment.</span>
+        </div>
+        <div class="assign-list" *ngIf="availableTrips.length > 0">
+          <div class="assign-item"
+               *ngFor="let trip of availableTrips"
+               [ngClass]="{'selected': selectedTrip?.id === trip.id}"
+               (click)="selectTrip(trip)">
+            <div class="bike-icon">
+              <img src="assets/trip.png" alt="trip" width="18" height="18"
+                   style="object-fit: contain;" />
+            </div>
+            <div class="bike-info">
+              <span class="bike-name">Trip #{{ trip.id }}</span>
+              <span class="bike-serial">
+                {{ trip.scheduled_at ? (trip.scheduled_at | date:'dd MMM HH:mm') : '—' }}
+              </span>
+            </div>
+            <span class="badge" [ngClass]="getTripStatusClass(trip.status)">{{ trip.status }}</span>
+            
+            <div class="assign-check" *ngIf="selectedTrip?.id === trip.id">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8a4a" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -551,57 +653,17 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
-      Bike assigned successfully!
+      Assigned successfully!
     </div>
 
     <div class="modal-actions">
       <button class="btn-cancel" (click)="showAssignModal = false">Cancel</button>
-      <button class="btn-submit" (click)="assignBike()"
-              [disabled]="!selectedBike || isAssigning">
-        {{ isAssigning ? 'Assigning...' : 'Assign Bike' }}
+      <button class="btn-submit" (click)="assignBikeAndTrip()"
+              [disabled]="!selectedBike || !selectedTrip || isAssigning">
+        {{ isAssigning ? 'Assigning...' : 'Assign Bike & Trip' }}
       </button>
     </div>
   </div>
 </div>
 
-<!-- ========== MODAL QR CODE ========== -->
-<div class="modal-overlay" *ngIf="showQrModal" (click)="closeQrModal($event)">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-icon green">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/>
-          <rect x="3" y="16" width="5" height="5"/>
-          <line x1="16" y1="16" x2="16" y2="21"/><line x1="16" y1="16" x2="21" y2="16"/>
-        </svg>
-      </div>
-      <div>
-        <h3>QR Code</h3>
-        <p>{{ qrBike?.name || 'Bike #' + qrBike?.id }} — Serial: {{ qrBike?.serialNumber || qrBike?.serial || '-' }}</p>
-      </div>
-      <button class="modal-close" (click)="showQrModal = false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
 
-    <div class="qr-container">
-  <div class="qr-wrapper">
-    <img *ngIf="qrCodeUrl" [src]="qrCodeUrl" alt="QR Code" class="qr-image" />
-    <div *ngIf="!qrCodeUrl" class="loading">
-      <div class="spinner"></div>
-      <span>Generating QR...</span>
-    </div>
-  </div>
-  <p class="qr-label">Bike ID: <strong>{{ qrBike?.id }}</strong></p>
-</div>
-
-    <div class="modal-actions">
-      <button class="btn-cancel" (click)="showQrModal = false">Close</button>
-      <a [href]="qrCodeUrl" [download]="'bike-' + qrBike?.id + '-qr.png'" class="btn-submit">
-        Download QR
-      </a>
-    </div>
-  </div>
-</div>

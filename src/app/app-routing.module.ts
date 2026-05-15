@@ -6,7 +6,7 @@ import { BikesComponent } from './pages/bikes/bikes.component';
 import { TripsComponent } from './pages/trips/trips.component';
 import { AuthGuard } from './guards/auth.guard';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
-
+import { TripDetailComponent } from './pages/trip-detail-component/trip-detail-component.component';
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
@@ -14,6 +14,7 @@ const routes: Routes = [
   { path: 'bikes', component: BikesComponent, canActivate: [AuthGuard] },
   { path: 'trips', component: TripsComponent, canActivate: [AuthGuard] },
   { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'trips/:id', component: TripDetailComponent },
 ];
 
 @NgModule({

@@ -15,14 +15,44 @@ export class TripService {
   }
 
   getTrips(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/bike-assignments`, { headers: this.getHeaders() });
+    return this.http.get(`${this.baseUrl}/trips`, { headers: this.getHeaders() });
+  }
+
+  getTripById(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/trips/${id}`, { headers: this.getHeaders() });
+  }
+
+  getTripDetails(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/trips/${id}`, { headers: this.getHeaders() });
+  }
+
+  createTrip(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/trips`, data, { headers: this.getHeaders() });
+  }
+
+  addUserToTrip(tripId: number, userId: number, bikeId: number): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/trips/${tripId}/users`,
+      { user_id: userId, bike_id: bikeId },
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // ✅ fixed: this.baseUrl (not this.apiUrl)
+  cancelTrip(id: number): Observable<any> {
+    return this.http.put(`${this.baseUrl}/trips/${id}/cancel`, {}, {
+      headers: this.getHeaders()
+    });
   }
 
   deleteTrip(id: any): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/bike-assignments/${id}`, { headers: this.getHeaders() });
+    return this.http.delete(`${this.baseUrl}/trips/${id}`, { headers: this.getHeaders() });
   }
 
-  // ✅ handleError centralisé ici
+  getUserTrips(userId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/trips/user/${userId}`, { headers: this.getHeaders() });
+  }
+
   handleError(err: any): string {
     if (err.status === 0)   return 'Cannot reach server. Check your connection.';
     if (err.status === 401) return 'Unauthorized. Please login again.';
@@ -31,9 +61,18 @@ export class TripService {
     return err?.error?.message || 'Something went wrong. Please try again.';
   }
 
-  // ✅ logout centralisé ici
   logout(): void {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
+  completeTripUser(tripId: number, userId: number): Observable<any> {
+  return this.http.put(
+    `${this.baseUrl}/trips/${tripId}/users/${userId}/complete`,
+    {},
+    { headers: this.getHeaders() }
+  );
+}
+getUserById(id: number): Observable<any> {
+  return this.http.get(`${this.baseUrl}/users/${id}`, { headers: this.getHeaders() });
+}
 }

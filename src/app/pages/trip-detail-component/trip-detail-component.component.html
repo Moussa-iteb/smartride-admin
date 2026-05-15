@@ -1,0 +1,196 @@
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logo_smartride.png" alt="SmartRide" class="brand-logo" />
+      <span class="brand-name">SmartRide</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" routerLink="/bikes">
+        <img src="assets/bike.png" width="16" height="16"
+             style="filter: brightness(0) invert(0.5); object-fit: contain;" />
+        <span>Bikes</span>
+      </a>
+      <a class="nav-item active" routerLink="/trips">
+        <img src="assets/trip.png" width="18" height="18"
+             style="filter: brightness(0) invert(0.5);" />
+        <span>Trips</span>
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-cancel" (click)="goBack()"
+                style="display:flex;align-items:center;gap:6px;margin-right:16px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Back
+        </button>
+        <span class="page-sub">{{ trip?.started_at | date:'dd MMM yyyy' }}</span>
+      </div>
+    </header>
+
+    <div class="panel" *ngIf="!isLoading">
+
+      <!-- VIEW 1 — liste users -->
+<ng-container *ngIf="!selectedTripUser">
+  <div class="panel-header">
+    <h2 class="panel-title">Users in this trip</h2>
+    <span class="panel-sub">{{ trip?.tripUsers?.length || 0 }} users</span>
+  </div>
+
+  <div style="padding: 0 24px 24px; overflow-x: auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      
+      <!-- Header -->
+      <thead>
+        <tr style="border-bottom: 1.5px solid #e5e7eb;">
+          <th style="padding:10px 12px; text-align:left; color:#888; font-weight:500;">User</th>
+          <th style="padding:10px 12px; text-align:left; color:#888; font-weight:500;">Username</th>
+          <th style="padding:10px 12px; text-align:left; color:#888; font-weight:500;">Email</th>
+          <th style="padding:10px 12px; text-align:left; color:#888; font-weight:500;">Status</th>
+          <th style="padding:10px 12px; text-align:left; color:#888; font-weight:500;"></th>
+        </tr>
+      </thead>
+
+      <!-- Rows -->
+      <tbody>
+        <tr *ngFor="let tu of trip?.tripUsers; let j = index"
+            style="border-bottom: 1px solid #f0f0f0;"
+            [style.opacity]="tu.status === 'completed' ? '1' : '0.55'">
+
+          <!-- Avatar + Name -->
+<td style="padding:12px;">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div class="user-avatar" [ngClass]="getAvatarColor(j)"
+         style="width:34px;height:34px;font-size:13px;flex-shrink:0;">
+      {{ tu.user?.username?.charAt(0)?.toUpperCase() || '?' }}
+    </div>
+  </div>
+</td>
+          <!-- Username -->
+          <td style="padding:12px; color:#555;">
+            {{ tu.user?.username || '—' }}
+          </td>
+
+          <!-- Email -->
+          <td style="padding:12px; color:#555;">
+            {{ tu.user?.email || '—' }}
+          </td>
+
+          
+          <!-- Status -->
+          <td style="padding:12px;">
+            <span class="badge" [ngClass]="getTripStatusClass(tu.status)">
+              {{ tu.status || '—' }}
+            </span>
+          </td>
+
+          <!-- Action -->
+          <td style="padding:12px;">
+            <button *ngIf="tu.status === 'completed'"
+                    class="btn-view"
+                    (click)="openTripUserDetail(tu)">
+              View trip
+            </button>
+          </td>
+
+        </tr>
+
+        <tr *ngIf="!trip?.tripUsers?.length">
+          <td colspan="6" class="empty-row" style="text-align:center; padding:32px;">
+            No users assigned
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ng-container>
+
+      <!-- VIEW 2 — carte GPS -->
+      <ng-container *ngIf="selectedTripUser">
+        <div style="padding: 24px 24px 0;">
+          <button class="btn-cancel"
+                  style="display:flex;align-items:center;gap:6px;margin-bottom:16px;"
+                  (click)="closeTripUserDetail()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back to users
+          </button>
+        </div>
+
+        <!-- Header user -->
+        <div style="display:flex;align-items:center;gap:12px;padding:0 24px 16px;">
+          <div class="user-avatar av-blue" style="width:40px;height:40px;font-size:16px;">
+            {{ selectedTripUser.user?.username?.charAt(0)?.toUpperCase() || '?' }}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:14px;">
+              {{ selectedTripUser.user?.firstName || '' }} {{ selectedTripUser.user?.lastName || '' }}
+              <span *ngIf="!selectedTripUser.user?.firstName && !selectedTripUser.user?.lastName">
+                {{ selectedTripUser.user?.username || '—' }}
+              </span>
+            </div>
+            
+          </div>
+          <span class="badge" [ngClass]="getTripStatusClass(selectedTripUser.status)">
+            {{ selectedTripUser.status }}
+          </span>
+        </div>
+
+        <!-- Google Map -->
+        <div style="padding: 0 24px 24px;">
+          <google-map
+            *ngIf="mapCenter"
+            [center]="mapCenter"
+            [zoom]="mapZoom"
+            [options]="mapOptions"
+            width="100%"
+            height="420px">
+
+            <map-polyline
+              *ngIf="polylinePath.length > 1"
+              [path]="polylinePath"
+              [options]="polylineOptions">
+            </map-polyline>
+
+            <map-marker
+              *ngIf="startMarker"
+              [position]="startMarker"
+              [options]="startMarkerOptions">
+            </map-marker>
+
+            <map-marker
+              *ngIf="endMarker"
+              [position]="endMarker"
+              [options]="endMarkerOptions">
+            </map-marker>
+
+          </google-map>
+
+          <div *ngIf="!mapCenter" style="text-align:center;padding:40px;color:#aaa;">
+            No GPS points available
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+
+    <div class="loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <span>Loading trip...</span>
+    </div>
+  </main>
+</div>
