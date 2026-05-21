@@ -135,7 +135,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         const bikes = Array.isArray(res.data) ? res.data :
                       Array.isArray(res.data?.bikes) ? res.data.bikes :
                       Array.isArray(res) ? res : [];
-        console.log('BIKES SAMPLE:', bikes[0]);
         this.stats.activeBikes = bikes.filter((b: any) =>
           ['available', 'in use', 'in_use', 'active', 'Available', 'In Use', 'InUse']
             .includes(b.status)
@@ -375,7 +374,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ كل الـ trips — planned, active, completed, cancelled
   loadAvailableTrips() {
     this.isLoadingTrips = true;
     this.tripListSub = this.tripService.getTrips().subscribe({
@@ -393,7 +391,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   selectBike(bike: any) { this.selectedBike = bike; }
   selectTrip(trip: any) { this.selectedTrip = trip; }
 
-  // ===== ASSIGN BIKE فقط (backend يخلق trip جديدة تلقائياً) =====
   assignBike() {
     if (!this.selectedBike || !this.userToAssign) return;
     this.isAssigning = true;
@@ -420,13 +417,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ===== ASSIGN BIKE + TRIP موجودة =====
   assignBikeAndTrip() {
     if (!this.selectedBike || !this.selectedTrip || !this.userToAssign) return;
     this.isAssigning = true;
     this.assignError = '';
-
-    // ✅ tripId → backend يستعمل الـ trip الموجودة بدون خلق جديدة
     this.bikeService.assignBike(
       this.userToAssign.id,
       this.selectedBike.id,
@@ -450,7 +444,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ===== ASSIGN TRIP فقط =====
   assignTrip() {
     if (!this.selectedTrip || !this.userToAssign) return;
     if (!this.selectedBike) {

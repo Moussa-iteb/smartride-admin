@@ -45,6 +45,13 @@ export class TripsComponent implements OnInit, OnDestroy {
     scheduled_at: ''
   };
 
+  // ─── Real-Time Active Trip ────────────────────────────────────────────────────
+  showActiveModal = false;
+  // ✅ CORRIGÉ : "activeTrip" = l'objet trip affiché dans le modal
+  //    "activeTrips" (avec s) = getter compteur pour les stats
+  activeTrip: any = null;
+  private activeRefreshInterval: any = null;
+
   private tripsSub?: Subscription;
   private deleteSub?: Subscription;
 
@@ -135,7 +142,7 @@ export class TripsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Trip Details → navigate to page ─────────────────────────────────────────
+  // ─── Trip Details ─────────────────────────────────────────────────────────────
 
   openDetails(trip: any) {
     this.router.navigate(['/trips', trip.id]);
@@ -190,7 +197,29 @@ export class TripsComponent implements OnInit, OnDestroy {
 
   // ─── Active Trip Modal ────────────────────────────────────────────────────────
 
+  openActiveTrip(trip: any) {
+    this.tripService.getTripById(trip.id).subscribe({
+      next: (res: any) => {
+        this.activeTrip = res.data || res;
+        this.showActiveModal = true;
+        this.startActiveRefresh(trip.id);
+      },
+      error: () => {
+        this.activeTrip = { ...trip };
+        this.showActiveModal = true;
+        this.startActiveRefresh(trip.id);
+      }
+    });
+  }
+
+  closeActiveModal() {
+    this.showActiveModal = false;
+    this.activeTrip = null;
+    this.stopActiveRefresh();
+  }
+
   openActiveTripUserDetail(tu: any) {
+    // ✅ CORRIGÉ : utilise activeTrip (objet) au lieu de activeTripData
     this.tripService.getTripById(this.activeTrip.id).subscribe({
       next: (res: any) => {
         this.detailsTrip = res.data || res;
@@ -210,6 +239,30 @@ export class TripsComponent implements OnInit, OnDestroy {
     });
   }
 
+  private startActiveRefresh(tripId: number) {
+    this.stopActiveRefresh();
+    this.activeRefreshInterval = setInterval(() => {
+      this.tripService.getTripById(tripId).subscribe({
+        next: (res: any) => {
+          // ✅ CORRIGÉ : utilise activeTrip (objet)
+          this.activeTrip = res.data || res;
+          if (this.activeTrip.status !== 'active') {
+            this.stopActiveRefresh();
+            this.loadTrips();
+          }
+        },
+        error: () => this.stopActiveRefresh()
+      });
+    }, 30000);
+  }
+
+  private stopActiveRefresh() {
+    if (this.activeRefreshInterval) {
+      clearInterval(this.activeRefreshInterval);
+      this.activeRefreshInterval = null;
+    }
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────────
 
   getActiveUsers(trip: any): any[] {
@@ -217,10 +270,13 @@ export class TripsComponent implements OnInit, OnDestroy {
     return trip.tripUsers;
   }
 
-  get totalTrips(): number  { return this.trips.length; }
+  get totalTrips(): number     { return this.trips.length; }
+
+  // ✅ CORRIGÉ : getter "activeTrips" (avec s) pour le compteur de stats
+  //    La property "activeTrip" (sans s) est l'objet trip du modal actif
   get activeTrips(): number {
-  return this.trips.filter(t => t.status === 'active').length;
-}
+    return this.trips.filter(t => t.status === 'active').length;
+  }
 
   get completedTrips(): number {
     return this.trips
@@ -228,7 +284,7 @@ export class TripsComponent implements OnInit, OnDestroy {
       .filter((tu: any) => tu.status === 'completed').length;
   }
 
-  get plannedTrips(): number { return this.trips.filter(t => t.status === 'planned').length; }
+  get plannedTrips(): number   { return this.trips.filter(t => t.status === 'planned').length; }
 
   get totalUsers(): number {
     const ids = new Set(this.trips.flatMap(t =>
@@ -255,7 +311,7 @@ export class TripsComponent implements OnInit, OnDestroy {
 
   getDuration(start: string, end: string): string {
     if (!start || !end) return '—';
-    const ms = new Date(end).getTime() - new Date(start).getTime();
+    const ms   = new Date(end).getTime() - new Date(start).getTime();
     const mins = Math.floor(ms / 60000);
     if (mins < 0) return '—';
     return mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
@@ -286,9 +342,9 @@ export class TripsComponent implements OnInit, OnDestroy {
   async openQrModal(trip: any, event: Event) {
     event.stopPropagation();
     this.selectedTrip = trip;
-    this.qrCodeUrl = '';
-    this.qrLoading = true;
-    this.showQrModal = true;
+    this.qrCodeUrl    = '';
+    this.qrLoading    = true;
+    this.showQrModal  = true;
 
     if (trip.qr_code || trip.qrCode) {
       this.qrCodeUrl = trip.qr_code || trip.qrCode;
@@ -297,7 +353,7 @@ export class TripsComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const QRCode = await import('qrcode');
+      const QRCode   = await import('qrcode');
       this.qrCodeUrl = await (QRCode as any).toDataURL(
         JSON.stringify({ type: 'trip', tripId: trip.id }),
         { width: 250, margin: 2, color: { dark: '#1a8a4a', light: '#ffffff' } }
@@ -307,16 +363,16 @@ export class TripsComponent implements OnInit, OnDestroy {
   }
 
   closeQrModal() {
-    this.showQrModal = false;
+    this.showQrModal  = false;
     this.selectedTrip = null;
-    this.qrCodeUrl = '';
-    this.qrLoading = false;
+    this.qrCodeUrl    = '';
+    this.qrLoading    = false;
   }
 
   downloadQR() {
     if (!this.qrCodeUrl) return;
     const link = document.createElement('a');
-    link.href = this.qrCodeUrl;
+    link.href     = this.qrCodeUrl;
     link.download = `QR_Trip_${this.selectedTrip?.id}.png`;
     link.click();
   }
@@ -326,79 +382,29 @@ export class TripsComponent implements OnInit, OnDestroy {
   confirmDelete(trip: any, event: Event) {
     event.stopPropagation();
     this.tripToDelete = trip;
-    this.deleteError = '';
+    this.deleteError  = '';
     this.showDeleteModal = true;
   }
 
   deleteTrip() {
     if (!this.tripToDelete) return;
     this.isDeleting = true;
-    this.deleteSub = this.tripService.deleteTrip(this.tripToDelete.id).subscribe({
+    this.deleteSub  = this.tripService.deleteTrip(this.tripToDelete.id).subscribe({
       next: () => {
         const deletedId = this.tripToDelete.id;
         this.trips = this.trips.filter(t => t.id !== deletedId);
         this.filterTrips();
         this.showDeleteModal = false;
-        this.tripToDelete = null;
-        this.isDeleting = false;
-        this.deleteError = '';
+        this.tripToDelete    = null;
+        this.isDeleting      = false;
+        this.deleteError     = '';
         if (this.detailsTrip?.id === deletedId) this.closeDetails();
       },
       error: (err: any) => {
         this.deleteError = this.tripService.handleError(err);
-        this.isDeleting = false;
+        this.isDeleting  = false;
       }
     });
-  }
-
-  // ─── Real-Time Active Trip ────────────────────────────────────────────────────
-
-  showActiveModal = false;
-  activeTrip: any = null;
-  private activeRefreshInterval: any = null;
-
-  openActiveTrip(trip: any) {
-    this.tripService.getTripById(trip.id).subscribe({
-      next: (res: any) => {
-        this.activeTrip = res.data || res;
-        this.showActiveModal = true;
-        this.startActiveRefresh(trip.id);
-      },
-      error: () => {
-        this.activeTrip = { ...trip };
-        this.showActiveModal = true;
-        this.startActiveRefresh(trip.id);
-      }
-    });
-  }
-
-  closeActiveModal() {
-    this.showActiveModal = false;
-    this.activeTrip = null;
-    this.stopActiveRefresh();
-  }
-
-  private startActiveRefresh(tripId: number) {
-    this.stopActiveRefresh();
-    this.activeRefreshInterval = setInterval(() => {
-      this.tripService.getTripById(tripId).subscribe({
-        next: (res: any) => {
-          this.activeTrip = res.data || res;
-          if (this.activeTrip.status !== 'active') {
-            this.stopActiveRefresh();
-            this.loadTrips();
-          }
-        },
-        error: () => this.stopActiveRefresh()
-      });
-    }, 30000);
-  }
-
-  private stopActiveRefresh() {
-    if (this.activeRefreshInterval) {
-      clearInterval(this.activeRefreshInterval);
-      this.activeRefreshInterval = null;
-    }
   }
 
   logout() { this.tripService.logout(); }

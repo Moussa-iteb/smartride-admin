@@ -13,7 +13,7 @@ export class LoginComponent implements OnDestroy {
   isLoading = false;
   error = '';
 
-  private loginSub?: Subscription; // ✅ évite memory leak
+  private loginSub?: Subscription;
 
   constructor(private authService: AuthService) {}
 
@@ -33,13 +33,13 @@ export class LoginComponent implements OnDestroy {
         this.authService.navigateHome();
       },
       error: (err) => {
-        this.error = this.authService.handleError(err); // ✅
+        this.error = this.authService.handleError(err);
         this.isLoading = false;
       }
     });
   }
 
   ngOnDestroy(): void {
-    this.loginSub?.unsubscribe(); // ✅ cleanup à la destruction du composant
+    this.loginSub?.unsubscribe();
   }
 }
