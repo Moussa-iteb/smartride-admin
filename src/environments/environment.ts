@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
   firebaseConfig: {
-    apiKey: 'AIzaSyA-mVLD4A_ZX4cdTqm--IA1CpsJgXnIqv4',
+    apiKey: '',
     authDomain: 'smartride-7e6ee.firebaseapp.com',
     projectId: 'smartride-7e6ee',
     storageBucket: 'smartride-7e6ee.firebasestorage.app',
