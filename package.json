@@ -1,6 +1,9 @@
 {
   "name": "smartride-admin",
   "version": "0.0.0",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -8,9 +11,6 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
-  "engines": {
-  "node": "24.x"
-},
   "private": true,
   "dependencies": {
     "@angular/animations": "~13.3.0",
