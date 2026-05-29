@@ -23,15 +23,25 @@ export class ForgotPasswordComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   sendCode() {
-    this.error = '';
-    if (!this.email) { this.error = 'Please enter your email.'; return; }
-    this.isLoading = true;
-    this.authService.forgotPassword(this.email).subscribe({
-      next: () => { this.isLoading = false; this.step = 2; },
-      error: (err: any) => { this.error = err?.error?.message || 'Email not found.'; this.isLoading = false; }
-    });
-  }
-
+  this.error = '';
+  if (!this.email) { this.error = 'Please enter your email.'; return; }
+  this.isLoading = true;
+  this.authService.forgotPassword(this.email).subscribe({
+    next: (res: any) => {
+      this.isLoading = false;
+      // إذا الـ backend رجع الكود مباشرة — حطه تلقائياً
+      if (res?.code) {
+        this.code = res.code;
+        this.success = `Your reset code is: ${res.code}`;
+      }
+      this.step = 2;
+    },
+    error: (err: any) => { 
+      this.error = err?.error?.message || 'Email not found.'; 
+      this.isLoading = false; 
+    }
+  });
+}
   resetPassword() {
     this.error = '';
     if (!this.code) { this.error = 'Please enter the code.'; return; }

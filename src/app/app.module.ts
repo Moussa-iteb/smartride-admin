@@ -12,6 +12,9 @@ import { TripsComponent } from './pages/trips/trips.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { TripDetailComponent } from './pages/trip-detail-component/trip-detail-component.component';
 import { GoogleMapsModule } from '@angular/google-maps';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
+
 
 // ✅ NOTE : importez Firebase ICI après avoir exécuté :
 //    npm uninstall @angular/fire
@@ -44,6 +47,8 @@ import { GoogleMapsModule } from '@angular/google-maps';
     // Décommentez après réinstallation de @angular/fire@7.6.1 :
     // provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     // provideAnalytics(() => getAnalytics()),
+      { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+
   ],
   bootstrap: [AppComponent]
 })

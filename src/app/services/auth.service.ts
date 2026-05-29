@@ -38,4 +38,17 @@ export class AuthService {
   resetPassword(email: string, code: string, newPassword: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/auth/reset-password`, { email, code, newPassword });
   }
+  getToken(): string | null {
+  return localStorage.getItem('token');
+}
+
+isLoggedIn(): boolean {
+  return !!this.getToken();
+}
+
+logout(): void {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  this.router.navigate(['/login']);
+}
 }
