@@ -3,16 +3,16 @@ import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-notifications',
-  templateUrl: './notifications.component.html'
+  templateUrl: './notifications-component.component.html'
 })
 export class NotificationsComponent {
-  target   = 'all';
+  target    = 'all';
   userId?: number;
-  title    = '';
-  body     = '';
+  title     = '';
+  body      = '';
   isLoading = false;
-  message  = '';
-  success  = false;
+  message   = '';
+  success   = false;
 
   constructor(private notifService: NotificationService) {}
 
@@ -37,7 +37,7 @@ export class NotificationsComponent {
         this.success = true;
         this.isLoading = false;
         this.title = '';
-        this.body = '';
+        this.body  = '';
       },
       error: (err) => {
         this.message = '❌ Error: ' + (err.error?.message || 'Failed to send');
