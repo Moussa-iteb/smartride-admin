@@ -13,11 +13,7 @@ export class NotificationService {
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
 
-  sendNotification(data: {
-    userId?: number;
-    title: string;
-    body: string;
-  }): Observable<any> {
+  sendNotification(data: { userId?: number; title: string; body: string }): Observable<any> {
     return this.http.post(
       `${this.baseUrl}/notifications/send`,
       data,

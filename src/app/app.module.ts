@@ -14,8 +14,7 @@ import { TripDetailComponent } from './pages/trip-detail-component/trip-detail-c
 import { GoogleMapsModule } from '@angular/google-maps';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
-import { NotificationsComponentComponent } from './pages/notifications-component/notifications-component.component';
-
+import { NotificationsComponent } from './pages/notifications-component/notifications-component.component';
 
 // ✅ NOTE : importez Firebase ICI après avoir exécuté :
 //    npm uninstall @angular/fire
@@ -35,7 +34,7 @@ import { NotificationsComponentComponent } from './pages/notifications-component
     TripsComponent,
     ForgotPasswordComponent,
     TripDetailComponent,
-    NotificationsComponentComponent,
+    NotificationsComponent
   ],
   imports: [
     BrowserModule,
