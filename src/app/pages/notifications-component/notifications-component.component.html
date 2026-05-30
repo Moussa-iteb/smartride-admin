@@ -1,40 +1,87 @@
-<div class="panel" style="max-width: 600px; margin: 40px auto; padding: 32px;">
-  <h2 class="panel-title">Send Notification</h2>
-  <p class="panel-sub">Send push notification to users</p>
+<div class="dashboard">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logo_smartride.png" alt="SmartRide" class="brand-logo" />
+      <span class="brand-name">SmartRide</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" routerLink="/bikes">
+        <img src="assets/bike.png" width="16" height="16"
+             style="filter: brightness(0) invert(0.5); object-fit: contain;" />
+        <span>Bikes</span>
+      </a>
+      <a class="nav-item" routerLink="/trips">
+        <img src="assets/trip.png" width="18" height="18"
+             style="filter: brightness(0) invert(0.5);" />
+        <span>Trips</span>
+      </a>
+      <a class="nav-item active" routerLink="/notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span>Notifications</span>
+      </a>
+    </nav>
+  </aside>
 
-  <div class="form-group" style="margin-top: 24px;">
-    <label>Target</label>
-    <select [(ngModel)]="target" class="form-control">
-      <option value="all">All Users</option>
-      <option value="user">Specific User</option>
-    </select>
-  </div>
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">Notifications</h1>
+      </div>
+    </header>
 
-  <div class="form-group" *ngIf="target === 'user'">
-    <label>User ID</label>
-    <input type="number" [(ngModel)]="userId" class="form-control" placeholder="Enter user ID"/>
-  </div>
+    <div class="panel" style="max-width: 600px; margin: 32px auto;">
+      <div class="panel-header">
+        <h2 class="panel-title">Send Notification</h2>
+        <p class="panel-sub">Send push notification to users</p>
+      </div>
 
-  <div class="form-group">
-    <label>Title</label>
-    <input type="text" [(ngModel)]="title" class="form-control"
-           placeholder="Ex: New Bike Available"/>
-  </div>
+      <div style="padding: 24px;">
 
-  <div class="form-group">
-    <label>Message</label>
-    <textarea [(ngModel)]="body" class="form-control" rows="4"
-              placeholder="Ex: A new bike is available near you!"></textarea>
-  </div>
+        <div class="form-group">
+          <label>Target</label>
+          <select [(ngModel)]="target">
+            <option value="all">All Users</option>
+            <option value="user">Specific User</option>
+          </select>
+        </div>
 
-  <div style="display:flex; gap:12px; margin-top:16px;">
-    <button class="btn-submit" (click)="send()" [disabled]="isLoading">
-      {{ isLoading ? 'Sending...' : 'Send Notification' }}
-    </button>
-  </div>
+        <div class="form-group" *ngIf="target === 'user'">
+          <label>User ID</label>
+          <input type="number" [(ngModel)]="userId" placeholder="Enter user ID"/>
+        </div>
 
-  <div *ngIf="message" class="alert" [ngClass]="success ? 'alert-success' : 'alert-error'"
-       style="margin-top:16px;">
-    {{ message }}
-  </div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" [(ngModel)]="title" placeholder="Ex: New Bike Available"/>
+        </div>
+
+        <div class="form-group">
+          <label>Message</label>
+          <textarea [(ngModel)]="body" rows="4"
+                    placeholder="Ex: A new bike is available near you!"></textarea>
+        </div>
+
+        <button class="btn-send" (click)="send()" [disabled]="isLoading">
+          {{ isLoading ? 'Sending...' : 'Send Notification' }}
+        </button>
+
+        <div *ngIf="message" [ngClass]="success ? 'alert-success' : 'alert-error'">
+          {{ message }}
+        </div>
+
+      </div>
+    </div>
+  </main>
 </div>
