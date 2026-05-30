@@ -2,12 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { NotificationService } from '../../services/notification.service';
 
 interface NotifHistory {
-  title:  string;
-  body:   string;
-  target: string;
+  title:   string;
+  body:    string;
+  target:  string;
   userId?: number;
-  time:   string;
-  recent: boolean;
+  time:    string;
+  recent:  boolean;
 }
 
 interface NotifSettings {
@@ -16,17 +16,10 @@ interface NotifSettings {
   maintenance:  boolean;
 }
 
-interface NotifStats {
-  sent:     number;
-  openRate: number;
-  reached:  number;
-  failed:   number;
-}
-
 @Component({
-  selector: 'app-notifications',
+  selector:    'app-notifications',
   templateUrl: './notifications-component.component.html',
-  styleUrls:  ['./notifications-component.component.scss']
+  styleUrls:   ['./notifications-component.component.scss']
 })
 export class NotificationsComponent implements OnInit {
 
@@ -40,13 +33,6 @@ export class NotificationsComponent implements OnInit {
 
   history: NotifHistory[] = [];
 
-  stats: NotifStats = {
-    sent:     84,
-    openRate: 76,
-    reached:  142,
-    failed:   3
-  };
-
   settings: NotifSettings = {
     newBike:      true,
     tripComplete: true,
@@ -56,11 +42,38 @@ export class NotificationsComponent implements OnInit {
   constructor(private notifService: NotificationService) {}
 
   ngOnInit(): void {
-    this.history = [
-      { title: 'Maintenance scheduled', body: 'Station 4 bikes offline', target: 'all', time: '2m ago',  recent: true  },
-      { title: 'New route available',   body: 'Central park loop added', target: 'all', time: '1h ago',  recent: false },
-      { title: 'Ride complete',         body: 'Trip summary ready',      target: 'user', userId: 1042, time: '3h ago', recent: false }
-    ];
+    this.loadRecent();
+  }
+
+  loadRecent(): void {
+    this.notifService.getRecent().subscribe({
+      next: (res) => {
+        this.history = res.data.map((item: any) => ({
+          title:  item.title,
+          body:   item.body,
+          target: item.target,
+          userId: item.userId,
+          time:   this.timeAgo(item.createdAt),
+          recent: this.isRecent(item.createdAt)
+        }));
+      },
+      error: () => {
+        this.history = [];
+      }
+    });
+  }
+
+  private timeAgo(dateStr: string): string {
+    const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    if (diff < 60)   return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  private isRecent(dateStr: string): boolean {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    return diff < 10 * 60 * 1000; // moins de 10 minutes
   }
 
   reset(): void {
@@ -95,21 +108,12 @@ export class NotificationsComponent implements OnInit {
 
     this.notifService.sendNotification(payload).subscribe({
       next: () => {
-        this.history.unshift({
-          title:  this.title,
-          body:   this.body,
-          target: this.target,
-          userId: this.userId,
-          time:   'just now',
-          recent: true
-        });
-        this.history = this.history.slice(0, 5);
-        this.stats.sent++;
         this.message   = 'Notification sent successfully!';
         this.success   = true;
         this.isLoading = false;
         this.title     = '';
         this.body      = '';
+        this.loadRecent(); // ← recharge l'historique réel
       },
       error: (err) => {
         this.message   = 'Error: ' + (err.error?.message || 'Failed to send notification.');
@@ -120,7 +124,6 @@ export class NotificationsComponent implements OnInit {
   }
 
   saveSettings(): void {
-    // appel API settings si nécessaire
     this.message = 'Settings saved successfully!';
     this.success = true;
     setTimeout(() => this.message = '', 3000);

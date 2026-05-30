@@ -20,4 +20,11 @@ export class NotificationService {
       { headers: this.getHeaders() }
     );
   }
+
+  getRecent(): Observable<any> {
+    return this.http.get(
+      `${this.baseUrl}/notifications/recent`,
+      { headers: this.getHeaders() }
+    );
+  }
 }
