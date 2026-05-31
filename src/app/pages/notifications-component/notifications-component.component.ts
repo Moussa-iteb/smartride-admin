@@ -87,45 +87,40 @@ export class NotificationsComponent implements OnInit {
   }
 
   send(): void {
-    if (!this.title.trim() || !this.body.trim()) {
-      this.message = 'Title and message are required.';
-      this.success = false;
-      return;
-    }
-    if (this.target === 'user' && !this.userId) {
-      this.message = 'Please enter a user ID.';
-      this.success = false;
-      return;
-    }
+  if (this.isLoading) return;  // ✅ empêche double appel
 
-    this.isLoading = true;
-    this.message   = '';
-
-    const payload: any = { title: this.title, body: this.body };
-    if (this.target === 'user' && this.userId) {
-      payload.userId = this.userId;
-    }
-
-    this.notifService.sendNotification(payload).subscribe({
-      next: () => {
-        this.message   = 'Notification sent successfully!';
-        this.success   = true;
-        this.isLoading = false;
-        this.title     = '';
-        this.body      = '';
-        this.loadRecent(); // ← recharge l'historique réel
-      },
-      error: (err) => {
-        this.message   = 'Error: ' + (err.error?.message || 'Failed to send notification.');
-        this.success   = false;
-        this.isLoading = false;
-      }
-    });
+  if (!this.title.trim() || !this.body.trim()) {
+    this.message = 'Title and message are required.';
+    this.success = false;
+    return;
+  }
+  if (this.target === 'user' && !this.userId) {
+    this.message = 'Please enter a user ID.';
+    this.success = false;
+    return;
   }
 
-  saveSettings(): void {
-    this.message = 'Settings saved successfully!';
-    this.success = true;
-    setTimeout(() => this.message = '', 3000);
+  this.isLoading = true;
+  this.message   = '';
+
+  const payload: any = { title: this.title, body: this.body };
+  if (this.target === 'user' && this.userId) {
+    payload.userId = this.userId;
   }
+
+  this.notifService.sendNotification(payload).subscribe({
+    next: () => {
+      this.message   = 'Notification sent successfully!';
+      this.success   = true;
+      this.isLoading = false;
+      this.title     = '';
+      this.body      = '';
+      this.loadRecent();
+    },
+    error: (err) => {
+      this.message   = 'Error: ' + (err.error?.message || 'Failed to send notification.');
+      this.success   = false;
+      this.isLoading = false;
+    }
+  });
 }
