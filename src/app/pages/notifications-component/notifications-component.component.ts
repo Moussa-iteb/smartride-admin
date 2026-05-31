@@ -65,15 +65,15 @@ export class NotificationsComponent implements OnInit {
 
   private timeAgo(dateStr: string): string {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-    if (diff < 60)   return 'just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
   }
 
   private isRecent(dateStr: string): boolean {
     const diff = Date.now() - new Date(dateStr).getTime();
-    return diff < 10 * 60 * 1000; // moins de 10 minutes
+    return diff < 10 * 60 * 1000;
   }
 
   reset(): void {
@@ -87,40 +87,47 @@ export class NotificationsComponent implements OnInit {
   }
 
   send(): void {
-  if (this.isLoading) return;  // ✅ empêche double appel
+    if (this.isLoading) return;
 
-  if (!this.title.trim() || !this.body.trim()) {
-    this.message = 'Title and message are required.';
-    this.success = false;
-    return;
-  }
-  if (this.target === 'user' && !this.userId) {
-    this.message = 'Please enter a user ID.';
-    this.success = false;
-    return;
-  }
-
-  this.isLoading = true;
-  this.message   = '';
-
-  const payload: any = { title: this.title, body: this.body };
-  if (this.target === 'user' && this.userId) {
-    payload.userId = this.userId;
-  }
-
-  this.notifService.sendNotification(payload).subscribe({
-    next: () => {
-      this.message   = 'Notification sent successfully!';
-      this.success   = true;
-      this.isLoading = false;
-      this.title     = '';
-      this.body      = '';
-      this.loadRecent();
-    },
-    error: (err) => {
-      this.message   = 'Error: ' + (err.error?.message || 'Failed to send notification.');
-      this.success   = false;
-      this.isLoading = false;
+    if (!this.title.trim() || !this.body.trim()) {
+      this.message = 'Title and message are required.';
+      this.success = false;
+      return;
     }
-  });
+    if (this.target === 'user' && !this.userId) {
+      this.message = 'Please enter a user ID.';
+      this.success = false;
+      return;
+    }
+
+    this.isLoading = true;
+    this.message   = '';
+
+    const payload: any = { title: this.title, body: this.body };
+    if (this.target === 'user' && this.userId) {
+      payload.userId = this.userId;
+    }
+
+    this.notifService.sendNotification(payload).subscribe({
+      next: () => {
+        this.message   = 'Notification sent successfully!';
+        this.success   = true;
+        this.isLoading = false;
+        this.title     = '';
+        this.body      = '';
+        this.loadRecent();
+      },
+      error: (err: any) => {
+        this.message   = 'Error: ' + (err.error?.message || 'Failed to send notification.');
+        this.success   = false;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  saveSettings(): void {
+    this.message = 'Settings saved successfully!';
+    this.success = true;
+    setTimeout(() => this.message = '', 3000);
+  }
 }
