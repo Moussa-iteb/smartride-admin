@@ -86,6 +86,7 @@ export class NotificationsComponent implements OnInit {
     this.isLoading = false;
   }
 
+
   send(): void {
     if (this.isLoading) return;
 
@@ -124,6 +125,8 @@ export class NotificationsComponent implements OnInit {
       }
     });
   }
+// ===== LOGOUT =====
+  logout() { this.notifService.logout(); }
 
   saveSettings(): void {
     this.message = 'Settings saved successfully!';

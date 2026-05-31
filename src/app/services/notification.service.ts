@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private baseUrl = 'https://application-production-4e3f.up.railway.app/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
@@ -26,5 +27,9 @@ export class NotificationService {
       `${this.baseUrl}/notifications/recent`,
       { headers: this.getHeaders() }
     );
+  }
+  logout(): void {
+    localStorage.removeItem('token');
+    this.router.navigate(['/login']);
   }
 }
