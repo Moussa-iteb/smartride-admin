@@ -106,13 +106,7 @@
                   </svg>
                   All Users
                 </button>
-                <button type="button" class="pill" [class.selected]="target === 'user'" (click)="target = 'user'">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  Specific User
-                </button>
+                
               </div>
             </div>
 
@@ -152,21 +146,7 @@
           </div>
         </div>
 
-        <!-- HISTORY PANEL -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon panel-icon-green">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
-            <div>
-              <p class="panel-title">Recent notifications</p>
-              <p class="panel-sub">Last sent</p>
-            </div>
-          </div>
-
+        
           <div class="panel-body" style="padding-bottom: 12px;">
             <div *ngIf="history.length === 0" class="empty-row">No notifications sent yet</div>
 
@@ -188,72 +168,7 @@
 
       </div>
 
-      <!-- COLONNE DROITE -->
-      <div class="notif-right">
+     
+    
 
-        
-        <!-- SETTINGS PANEL -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon panel-icon-purple">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-              </svg>
-            </div>
-            <div>
-              <p class="panel-title">Notification settings</p>
-              <p class="panel-sub">Auto-send rules</p>
-            </div>
-          </div>
-
-          <div class="panel-body" style="padding-bottom: 8px; gap: 0;">
-            <div class="toggle-row">
-              <div>
-                <div class="toggle-label">New bike added</div>
-                <div class="toggle-sub">Notify all users automatically</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" [(ngModel)]="settings.newBike" />
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-            <div class="toggle-row">
-              <div>
-                <div class="toggle-label">Trip completed</div>
-                <div class="toggle-sub">Send summary to rider</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" [(ngModel)]="settings.tripComplete" />
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-            <div class="toggle-row">
-              <div>
-                <div class="toggle-label">Maintenance alert</div>
-                <div class="toggle-sub">Notify on bike issue detected</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" [(ngModel)]="settings.maintenance" />
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="panel-footer">
-            <button type="button" class="btn-purple" (click)="saveSettings()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              Save settings
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </main>
-</div>
+  
